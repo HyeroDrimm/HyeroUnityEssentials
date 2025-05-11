@@ -1,7 +1,9 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using static HyeroUnityEssentials.Helpers;
 
 namespace HyeroUnityEssentials
 {
@@ -37,6 +39,112 @@ namespace HyeroUnityEssentials
             var list = enumerable.ToList();
             list.Shuffle();
             return list;
+        }
+
+        public class DynamicWeightedRandomList<TWeightsProvider>
+        {
+            private float weightSum;
+            private float[] weights;
+            private TWeightsProvider[] weightProviders;
+            private Func<TWeightsProvider, float> weightProviderFunction;
+
+            public float WeightSum => weightSum;
+            public float[] Weights => weights;
+
+            public DynamicWeightedRandomList(TWeightsProvider[] weightProviders, Func<TWeightsProvider, float> weightProviderFunction)
+            {
+                this.weightProviders = weightProviders;
+                this.weightProviderFunction = weightProviderFunction;
+                weights = new float[weightProviders.Length];
+            }
+
+            public int GetRandomIndex()
+            {
+                UpdateWeights();
+                var roll = UnityEngine.Random.Range(0, weightSum);
+                var output = 0;
+                while (roll >= weights[output])
+                {
+                    roll -= weights[output];
+                    output++;
+                }
+
+                return output;
+            }
+
+            private void UpdateWeights()
+            {
+                for (int i = 0; i < weights.Length; i++)
+                {
+                    weights[i] = weightProviderFunction.Invoke(weightProviders[i]);
+                }
+
+                weightSum = weights.Sum();
+            }
+
+            public void UpdateItems(TWeightsProvider[] newItems)
+            {
+                weightProviders = newItems;
+                weights = new float[weightProviders.Length];
+            }
+        }
+
+        public class DynamicWeightedRandomListWithItems<TWeightsProvider, TItems>
+        {
+            private TItems[] items;
+            private DynamicWeightedRandomList<TWeightsProvider> baseList;
+
+            public float WeightSum => baseList.WeightSum;
+            public float[] Weights => baseList.Weights;
+            public TItems[] Items => items;
+
+            public DynamicWeightedRandomListWithItems(TWeightsProvider[] weightProviders, Func<TWeightsProvider, float> weightProviderFunction, TItems[] items)
+            {
+                baseList = new DynamicWeightedRandomList<TWeightsProvider>(weightProviders, weightProviderFunction);
+                this.items = items;
+            }
+
+            public int GetRandomIndex()
+            {
+                return baseList.GetRandomIndex();
+            }
+
+            public TItems GetRandomItem()
+            {
+                return Items[baseList.GetRandomIndex()];
+            }
+        }
+
+        public class DynamicWeightedRandomListWithItems<TItem>
+        {
+            private TItem[] items;
+            private DynamicWeightedRandomList<TItem> baseList;
+
+            public float WeightSum => baseList.WeightSum;
+            public float[] Weights => baseList.Weights;
+            public TItem[] Items => items;
+
+            public DynamicWeightedRandomListWithItems(TItem[] weightProviders, Func<TItem, float> weightProviderFunction)
+            {
+                baseList = new DynamicWeightedRandomList<TItem>(weightProviders, weightProviderFunction);
+                this.items = weightProviders;
+            }
+
+            public int GetRandomIndex()
+            {
+                return baseList.GetRandomIndex();
+            }
+
+            public TItem GetRandomItem()
+            {
+                return Items[baseList.GetRandomIndex()];
+            }
+
+            public void UpdateItems(TItem[] newItems)
+            {
+                items = newItems;
+                baseList.UpdateItems(newItems);
+            }
         }
 
         public class WeightedRandomList
