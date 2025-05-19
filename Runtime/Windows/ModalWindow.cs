@@ -57,7 +57,7 @@ public class ModalWindow : MonoBehaviour
         alternativeButton.onClick.AddListener(onAlternativeButtonPressed.Invoke);
     }
 
-    public static void ShowYesNo(string headerText, string contentText, Action onYesAction, Action onNoAction, string greenButtonText = "Yes", string redButtonText = "No")
+    public static void ShowYesNo(string headerText, string contentText, Sprite sprite = null, Action onYesAction = null, Action onNoAction = null, string greenButtonText = "Yes", string redButtonText = "No")
     {
         if (Instance == null)
         {
@@ -65,10 +65,10 @@ public class ModalWindow : MonoBehaviour
             return;
         }
 
-        Instance.ShowGreenRedImpl(headerText, contentText, onYesAction, onNoAction, greenButtonText, redButtonText);
+        Instance.ShowGreenRedImpl(headerText, contentText, sprite, onYesAction, onNoAction, greenButtonText, redButtonText);
     }
 
-    private void ShowGreenRedImpl(string headerText, string contentText, Action onYesAction, Action onNoAction, string greenButtonText, string redButtonText)
+    private void ShowGreenRedImpl(string headerText, string contentText, Sprite sprite = null, Action onYesAction = null, Action onNoAction = null, string greenButtonText = "Yes", string redButtonText = "No")
     {
         headerHolder.SetActive(true);
         this.headerText.gameObject.SetActive(true);
@@ -77,7 +77,8 @@ public class ModalWindow : MonoBehaviour
         horizontalLayoutHolder.SetActive(true);
         verticalLayoutHolder.SetActive(false);
 
-        horizontalLayoutImage.gameObject.SetActive(false);
+        horizontalLayoutImage.gameObject.SetActive(sprite != null);
+        horizontalLayoutImage.sprite = sprite;
 
         horizontalLayoutText.gameObject.SetActive(true);
         horizontalLayoutText.text = contentText;
@@ -90,16 +91,18 @@ public class ModalWindow : MonoBehaviour
         this.greenButtonText.text = greenButtonText;
         this.redButtonText.text = redButtonText;
 
-        onGreenButtonPressed = onYesAction;
+        if (onGreenButtonPressed != null)
+            onGreenButtonPressed = onYesAction;
         onGreenButtonPressed += WindowManager.Instance.CloseModal;
 
-        onRedButtonPressed = onNoAction;
+        if (onRedButtonPressed != null)
+            onRedButtonPressed = onNoAction;
         onRedButtonPressed += WindowManager.Instance.CloseModal;
 
         WindowManager.Instance.ShowModal(uiWindow);
     }
 
-    public static void ShowOk(string headerText, string contentText, Action onButtonPressed, string buttonText = "Ok")
+    public static void ShowOk(string headerText, string contentText, Sprite image = null, Action onButtonPressed = null, string buttonText = "Ok")
     {
         if (Instance == null)
         {
@@ -107,10 +110,10 @@ public class ModalWindow : MonoBehaviour
             return;
         }
 
-        Instance.ShowOkImpl(headerText, contentText, onButtonPressed, buttonText);
+        Instance.ShowOkImpl(headerText, contentText, image, onButtonPressed, buttonText);
     }
 
-    private void ShowOkImpl(string headerText, string contentText, Action onButtonPressed, string buttonText = "Ok")
+    private void ShowOkImpl(string headerText, string contentText, Sprite image = null, Action onButtonPressed = null, string buttonText = "Ok")
     {
         headerHolder.SetActive(true);
         this.headerText.gameObject.SetActive(true);
@@ -119,7 +122,8 @@ public class ModalWindow : MonoBehaviour
         horizontalLayoutHolder.SetActive(true);
         verticalLayoutHolder.SetActive(false);
 
-        horizontalLayoutImage.gameObject.SetActive(false);
+        horizontalLayoutImage.gameObject.SetActive(image != null);
+        horizontalLayoutImage.sprite = image;
 
         horizontalLayoutText.gameObject.SetActive(true);
         horizontalLayoutText.text = contentText;
@@ -131,7 +135,11 @@ public class ModalWindow : MonoBehaviour
 
         this.alternativeButtonText.text = buttonText;
 
-        onAlternativeButtonPressed = onButtonPressed;
+        if (onButtonPressed != null)
+            onAlternativeButtonPressed = onButtonPressed;
+
         onAlternativeButtonPressed += WindowManager.Instance.CloseModal;
+
+        WindowManager.Instance.ShowModal(uiWindow);
     }
 }
