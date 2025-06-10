@@ -6,6 +6,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
+[DefaultExecutionOrder(-10)]
 public class ModalWindow : MonoBehaviour
 {
     private static ModalWindow _instance;
@@ -52,9 +53,9 @@ public class ModalWindow : MonoBehaviour
         _instance = this;
         DontDestroyOnLoad(this);
 
-        greenButton.onClick.AddListener(onGreenButtonPressed.Invoke);
-        redButton.onClick.AddListener(onRedButtonPressed.Invoke);
-        alternativeButton.onClick.AddListener(onAlternativeButtonPressed.Invoke);
+        greenButton.onClick.AddListener(()=> onGreenButtonPressed?.Invoke());
+        redButton.onClick.AddListener(()=> onRedButtonPressed?.Invoke());
+        alternativeButton.onClick.AddListener(()=> onAlternativeButtonPressed?.Invoke());
     }
 
     public static void ShowYesNo(string headerText, string contentText, Sprite sprite = null, Action onYesAction = null, Action onNoAction = null, string greenButtonText = "Yes", string redButtonText = "No")
@@ -91,13 +92,13 @@ public class ModalWindow : MonoBehaviour
         this.greenButtonText.text = greenButtonText;
         this.redButtonText.text = redButtonText;
 
+        onGreenButtonPressed = WindowManager.Instance.CloseModal;
         if (onGreenButtonPressed != null)
-            onGreenButtonPressed = onYesAction;
-        onGreenButtonPressed += WindowManager.Instance.CloseModal;
+            onGreenButtonPressed += onYesAction;
 
+        onRedButtonPressed = WindowManager.Instance.CloseModal;
         if (onRedButtonPressed != null)
-            onRedButtonPressed = onNoAction;
-        onRedButtonPressed += WindowManager.Instance.CloseModal;
+            onRedButtonPressed += onNoAction;
 
         WindowManager.Instance.ShowModal(uiWindow);
     }
@@ -135,10 +136,10 @@ public class ModalWindow : MonoBehaviour
 
         this.alternativeButtonText.text = buttonText;
 
+        onAlternativeButtonPressed = WindowManager.Instance.CloseModal;
         if (onButtonPressed != null)
-            onAlternativeButtonPressed = onButtonPressed;
+            onAlternativeButtonPressed += onButtonPressed;
 
-        onAlternativeButtonPressed += WindowManager.Instance.CloseModal;
 
         WindowManager.Instance.ShowModal(uiWindow);
     }

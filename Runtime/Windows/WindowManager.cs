@@ -21,6 +21,7 @@ namespace HyeroUnityEssentials.WindowSystem
     /// <summary>
     /// Main window manager that handles all window-related operations
     /// </summary>
+    [DefaultExecutionOrder(-11)]
     public class WindowManager : MonoBehaviour
     {
         private static WindowManager _instance;
@@ -30,9 +31,7 @@ namespace HyeroUnityEssentials.WindowSystem
             {
                 if (_instance == null)
                 {
-                    GameObject go = new GameObject("WindowManager");
-                    _instance = go.AddComponent<WindowManager>();
-                    DontDestroyOnLoad(go);
+                    Debug.Log("No window manager");
                 }
                 return _instance;
             }
@@ -59,12 +58,12 @@ namespace HyeroUnityEssentials.WindowSystem
 
             _instance = this;
 
-            if (_windowContainer == null)
-            {
-                GameObject container = new GameObject("WindowContainer");
-                container.transform.SetParent(transform);
-                _windowContainer = container.transform;
-            }
+            // if (_windowContainer == null)
+            // {
+            //     GameObject container = new GameObject("WindowContainer");
+            //     container.transform.SetParent(transform);
+            //     _windowContainer = container.transform;
+            // }
 
             // Initialize and show starting window if assigned
             if (_startingWindow != null)
