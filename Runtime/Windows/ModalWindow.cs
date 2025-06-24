@@ -130,15 +130,15 @@ public class ModalWindow : MonoBehaviour
         horizontalLayoutText.text = contentText;
 
         footerHolder.SetActive(true);
-        greenButton.gameObject.SetActive(false);
+        greenButton.gameObject.SetActive(true);
         redButton.gameObject.SetActive(false);
-        alternativeButton.gameObject.SetActive(true);
+        alternativeButton.gameObject.SetActive(false);
 
         this.alternativeButtonText.text = buttonText;
 
-        onAlternativeButtonPressed = WindowManager.Instance.CloseModal;
+        onGreenButtonPressed = WindowManager.Instance.CloseModal;
         if (onButtonPressed != null)
-            onAlternativeButtonPressed += onButtonPressed;
+            onGreenButtonPressed += onButtonPressed;
 
 
         WindowManager.Instance.ShowModal(uiWindow);
