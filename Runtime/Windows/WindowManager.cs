@@ -263,5 +263,13 @@ namespace HyeroUnityEssentials.WindowSystem
         {
             return _windowHistory.Contains(window);
         }
+
+        public void CloseIfOpen(UIWindow window)
+        {
+            if (IsWindowOpen(window))
+            {
+                Back();
+            }
+        }
     }
 }

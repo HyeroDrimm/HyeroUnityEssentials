@@ -1,146 +1,182 @@
 using System;
-using HyeroUnityEssentials.WindowSystem;
-using System.Collections;
-using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.Video;
 
-[DefaultExecutionOrder(-10)]
-public class ModalWindow : MonoBehaviour
+namespace HyeroUnityEssentials.WindowSystem
 {
-    private static ModalWindow _instance;
-    public static ModalWindow Instance => _instance;
-
-    [SerializeField] private UIWindow uiWindow;
-
-    [Header("Header")]
-    [SerializeField] private GameObject headerHolder;
-    [SerializeField] private TMP_Text headerText;
-
-    [Header("Horizontal Content")]
-    [SerializeField] private GameObject horizontalLayoutHolder;
-    [SerializeField] private TMP_Text horizontalLayoutText;
-    [SerializeField] private Image horizontalLayoutImage;
-    
-    [Header("Vertical Content")]
-    [SerializeField] private GameObject verticalLayoutHolder;
-    [SerializeField] private TMP_Text verticalLayoutText;
-    [SerializeField] private Image verticalLayoutImage;
-
-    [Header("Footer")]
-    [SerializeField] private GameObject footerHolder;
-    [SerializeField] private Button greenButton;
-    [SerializeField] private TMP_Text greenButtonText;
-    [SerializeField] private Button redButton;
-    [SerializeField] private TMP_Text redButtonText;
-    [SerializeField] private Button alternativeButton;
-    [SerializeField] private TMP_Text alternativeButtonText;
-
-
-    private Action onGreenButtonPressed;
-    private Action onRedButtonPressed;
-    private Action onAlternativeButtonPressed;
-
-    private void Awake()
+    [DefaultExecutionOrder(-10)]
+    public class ModalWindow : MonoBehaviour
     {
-        if (_instance != null && _instance != this)
+        private static ModalWindow _instance;
+        public static ModalWindow Instance => _instance;
+
+        [SerializeField] private UIWindow uiWindow;
+        [SerializeField] private VideoPlayer videoPlayer;
+        [SerializeField] private float timeSlowDown;
+
+        [Header("Header")] [SerializeField] private GameObject headerHolder;
+        [SerializeField] private TMP_Text headerText;
+
+        [Header("Horizontal Content")] [SerializeField]
+        private GameObject horizontalLayoutHolder;
+
+        [SerializeField] private TMP_Text horizontalLayoutText;
+        [SerializeField] private Image horizontalLayoutImage;
+        [SerializeField] private RawImage horizontalLayoutVideo;
+
+        [Header("Vertical Content")] [SerializeField]
+        private GameObject verticalLayoutHolder;
+
+        [SerializeField] private TMP_Text verticalLayoutText;
+        [SerializeField] private Image verticalLayoutImage;
+        [SerializeField] private RawImage verticalLayoutVideo;
+
+        [Header("Footer")] [SerializeField] private GameObject footerHolder;
+        [SerializeField] private Button greenButton;
+        [SerializeField] private TMP_Text greenButtonText;
+        [SerializeField] private Button redButton;
+        [SerializeField] private TMP_Text redButtonText;
+        [SerializeField] private Button alternativeButton;
+        [SerializeField] private TMP_Text alternativeButtonText;
+
+
+        private Action onGreenButtonPressed;
+        private Action onRedButtonPressed;
+        private Action onAlternativeButtonPressed;
+
+        private TimeScaleModifier timeScaleModifier;
+
+        private void Awake()
         {
-            Destroy(gameObject);
-            return;
+            if (_instance != null && _instance != this)
+            {
+                Destroy(gameObject);
+                return;
+            }
+
+            timeScaleModifier = new TimeScaleModifier("modal window", timeSlowDown, 4);
+
+            _instance = this;
+            DontDestroyOnLoad(this);
+
+            greenButton.onClick.AddListener(() => onGreenButtonPressed?.Invoke());
+            redButton.onClick.AddListener(() => onRedButtonPressed?.Invoke());
+            alternativeButton.onClick.AddListener(() => onAlternativeButtonPressed?.Invoke());
         }
 
-        _instance = this;
-        DontDestroyOnLoad(this);
-
-        greenButton.onClick.AddListener(()=> onGreenButtonPressed?.Invoke());
-        redButton.onClick.AddListener(()=> onRedButtonPressed?.Invoke());
-        alternativeButton.onClick.AddListener(()=> onAlternativeButtonPressed?.Invoke());
-    }
-
-    public static void ShowYesNo(string headerText, string contentText, Sprite sprite = null, Action onYesAction = null, Action onNoAction = null, string greenButtonText = "Yes", string redButtonText = "No")
-    {
-        if (Instance == null)
+        public static void ShowYesNo(string headerText, string contentText, Sprite sprite = null,
+            VideoClip video = null, Action onYesAction = null, Action onNoAction = null, string greenButtonText = "Yes",
+            string redButtonText = "No", bool zeroTimeScale = true)
         {
-            Debug.LogError("No instance of Modal Window!");
-            return;
+            if (Instance == null)
+            {
+                Debug.LogError("No instance of Modal Window!");
+                return;
+            }
+
+            Instance.ShowGreenRedImpl(headerText, contentText, sprite, video, onYesAction, onNoAction, greenButtonText,
+                redButtonText, zeroTimeScale);
         }
 
-        Instance.ShowGreenRedImpl(headerText, contentText, sprite, onYesAction, onNoAction, greenButtonText, redButtonText);
-    }
-
-    private void ShowGreenRedImpl(string headerText, string contentText, Sprite sprite = null, Action onYesAction = null, Action onNoAction = null, string greenButtonText = "Yes", string redButtonText = "No")
-    {
-        headerHolder.SetActive(true);
-        this.headerText.gameObject.SetActive(true);
-        this.headerText.text = headerText;
-
-        horizontalLayoutHolder.SetActive(true);
-        verticalLayoutHolder.SetActive(false);
-
-        horizontalLayoutImage.gameObject.SetActive(sprite != null);
-        horizontalLayoutImage.sprite = sprite;
-
-        horizontalLayoutText.gameObject.SetActive(true);
-        horizontalLayoutText.text = contentText;
-
-        footerHolder.SetActive(true);
-        greenButton.gameObject.SetActive(true);
-        redButton.gameObject.SetActive(true);
-        alternativeButton.gameObject.SetActive(false);
-
-        this.greenButtonText.text = greenButtonText;
-        this.redButtonText.text = redButtonText;
-
-        onGreenButtonPressed = WindowManager.Instance.CloseModal;
-        if (onGreenButtonPressed != null)
-            onGreenButtonPressed += onYesAction;
-
-        onRedButtonPressed = WindowManager.Instance.CloseModal;
-        if (onRedButtonPressed != null)
-            onRedButtonPressed += onNoAction;
-
-        WindowManager.Instance.ShowModal(uiWindow);
-    }
-
-    public static void ShowOk(string headerText, string contentText, Sprite image = null, Action onButtonPressed = null, string buttonText = "Ok")
-    {
-        if (Instance == null)
+        private void ShowGreenRedImpl(string headerText, string contentText, Sprite sprite = null,
+            VideoClip video = null, Action onYesAction = null, Action onNoAction = null, string greenButtonText = "Yes",
+            string redButtonText = "No", bool zeroTimeScale = true)
         {
-            Debug.LogError("No instance of Modal Window!");
-            return;
+            headerHolder.SetActive(true);
+            this.headerText.gameObject.SetActive(true);
+            this.headerText.text = headerText;
+
+            horizontalLayoutHolder.SetActive(true);
+            verticalLayoutHolder.SetActive(false);
+
+            horizontalLayoutVideo.gameObject.SetActive(video != null);
+            videoPlayer.clip = video;
+            videoPlayer.Play();
+
+            horizontalLayoutImage.gameObject.SetActive(sprite != null);
+            horizontalLayoutImage.sprite = sprite;
+
+            horizontalLayoutText.gameObject.SetActive(true);
+            horizontalLayoutText.text = contentText;
+
+            footerHolder.SetActive(true);
+            greenButton.gameObject.SetActive(true);
+            redButton.gameObject.SetActive(true);
+            alternativeButton.gameObject.SetActive(false);
+
+            this.greenButtonText.text = greenButtonText;
+            this.redButtonText.text = redButtonText;
+
+            onGreenButtonPressed = WindowManager.Instance.CloseModal;
+            if (onGreenButtonPressed != null)
+                onGreenButtonPressed += onYesAction;
+
+            onRedButtonPressed = WindowManager.Instance.CloseModal;
+            if (onRedButtonPressed != null)
+                onRedButtonPressed += onNoAction;
+
+            if (zeroTimeScale)
+            {
+                TimeController.AddModifier(timeScaleModifier);
+                onGreenButtonPressed += () => TimeController.RemoveModifier(timeScaleModifier);
+                onRedButtonPressed += () => TimeController.RemoveModifier(timeScaleModifier);
+            }
+
+            WindowManager.Instance.ShowModal(uiWindow);
         }
 
-        Instance.ShowOkImpl(headerText, contentText, image, onButtonPressed, buttonText);
-    }
+        public static void ShowOk(string headerText, string contentText, Sprite image = null, VideoClip video = null,
+            Action onButtonPressed = null, string buttonText = "Ok", bool zeroTimeScale = true)
+        {
+            if (Instance == null)
+            {
+                Debug.LogError("No instance of Modal Window!");
+                return;
+            }
 
-    private void ShowOkImpl(string headerText, string contentText, Sprite image = null, Action onButtonPressed = null, string buttonText = "Ok")
-    {
-        headerHolder.SetActive(true);
-        this.headerText.gameObject.SetActive(true);
-        this.headerText.text = headerText;
+            Instance.ShowOkImpl(headerText, contentText, image, video, onButtonPressed, buttonText, zeroTimeScale);
+        }
 
-        horizontalLayoutHolder.SetActive(true);
-        verticalLayoutHolder.SetActive(false);
+        private void ShowOkImpl(string headerText, string contentText, Sprite image = null, VideoClip video = null,
+            Action onButtonPressed = null, string buttonText = "Ok", bool zeroTimeScale = true)
+        {
+            headerHolder.SetActive(true);
+            this.headerText.gameObject.SetActive(true);
+            this.headerText.text = headerText;
 
-        horizontalLayoutImage.gameObject.SetActive(image != null);
-        horizontalLayoutImage.sprite = image;
+            horizontalLayoutHolder.SetActive(true);
+            verticalLayoutHolder.SetActive(false);
 
-        horizontalLayoutText.gameObject.SetActive(true);
-        horizontalLayoutText.text = contentText;
+            horizontalLayoutVideo.gameObject.SetActive(video != null);
+            videoPlayer.clip = video;
+            videoPlayer.Play();
 
-        footerHolder.SetActive(true);
-        greenButton.gameObject.SetActive(true);
-        redButton.gameObject.SetActive(false);
-        alternativeButton.gameObject.SetActive(false);
+            horizontalLayoutImage.gameObject.SetActive(image != null);
+            horizontalLayoutImage.sprite = image;
 
-        this.alternativeButtonText.text = buttonText;
+            horizontalLayoutText.gameObject.SetActive(true);
+            horizontalLayoutText.text = contentText;
 
-        onGreenButtonPressed = WindowManager.Instance.CloseModal;
-        if (onButtonPressed != null)
-            onGreenButtonPressed += onButtonPressed;
+            footerHolder.SetActive(true);
+            greenButton.gameObject.SetActive(true);
+            redButton.gameObject.SetActive(false);
+            alternativeButton.gameObject.SetActive(false);
 
+            this.alternativeButtonText.text = buttonText;
 
-        WindowManager.Instance.ShowModal(uiWindow);
+            onGreenButtonPressed = WindowManager.Instance.CloseModal;
+            if (onButtonPressed != null)
+                onGreenButtonPressed += onButtonPressed;
+
+            if (zeroTimeScale)
+            {
+                TimeController.AddModifier(timeScaleModifier);
+                onGreenButtonPressed += () => TimeController.RemoveModifier(timeScaleModifier);
+            }
+
+            WindowManager.Instance.ShowModal(uiWindow);
+        }
     }
 }
