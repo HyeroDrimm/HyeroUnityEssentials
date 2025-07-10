@@ -164,7 +164,7 @@ namespace HyeroUnityEssentials.WindowSystem
             redButton.gameObject.SetActive(false);
             alternativeButton.gameObject.SetActive(false);
 
-            this.alternativeButtonText.text = buttonText;
+            this.greenButtonText.text = buttonText;
 
             onGreenButtonPressed = WindowManager.Instance.CloseModal;
             if (onButtonPressed != null)

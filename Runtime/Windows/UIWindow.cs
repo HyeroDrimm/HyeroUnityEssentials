@@ -8,7 +8,7 @@ namespace HyeroUnityEssentials.WindowSystem
     /// <summary>
     /// Base class for all UI windows that provides common functionality
     /// </summary>
-    [DefaultExecutionOrder(-1)]
+    [DefaultExecutionOrder(-10)]
     public class UIWindow : MonoBehaviour
     {
         [Header("Window Settings")]
